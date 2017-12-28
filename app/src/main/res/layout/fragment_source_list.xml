@@ -1,0 +1,15 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/source_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.vladan.newsreader.SourceListFragment">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/source_list_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        />
+
+</FrameLayout>

@@ -1,0 +1,49 @@
+<resources>
+    <string name="app_name">News Reader</string>
+    <string name="name">name</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="drawer_header_mail">mail</string>
+    <string name="action_settings">Setings</string>
+    <string name="action_language">Language</string>
+    <string name="host">https://newsapi.org/v2/</string>
+    <string name="endpoint">Endpoint</string>
+    <string name="sources">Sources</string>
+
+    <string-array name="category">
+        <item>business</item>
+        <item>entertainment</item>
+        <item>gaming</item>
+        <item>general</item>
+        <item>health-and-medical</item>
+        <item>music</item>
+        <item>politics</item>
+        <item>science-and-nature</item>
+        <item>sport</item>
+        <item>technology</item>
+
+    </string-array>
+
+    <string-array name="language">
+        <item>all</item>
+        <item>ar</item>
+        <item>en</item>
+        <item>cn</item>
+        <item>de</item>
+        <item>es</item>
+        <item>fr</item>
+        <item>he</item>
+        <item>it</item>
+        <item>nl</item>
+        <item>no</item>
+        <item>pt</item>
+        <item>ru</item>
+        <item>sv</item>
+        <item>ud</item>
+
+    </string-array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

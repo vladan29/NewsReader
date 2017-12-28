@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_endpoint"
+        android:icon="@drawable/query"
+        android:title="@string/endpoint"/>
+
+    <item
+        android:id="@+id/action_sources"
+        android:icon="@drawable/help"
+        android:title="@string/sources"/>
+
+</menu>
