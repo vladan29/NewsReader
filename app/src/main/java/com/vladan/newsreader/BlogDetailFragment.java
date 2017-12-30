@@ -1,5 +1,6 @@
 package com.vladan.newsreader;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
@@ -7,18 +8,21 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.TextView;
 
 
 public class BlogDetailFragment extends Fragment {
 
     private String url;
     WebView webView;
+    AlertDialog dialog;
 
     private OnFragmentInteractionListener mListener;
 
@@ -56,16 +60,18 @@ public class BlogDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         webView.setWebViewClient(new WebViewClient());
+        webView.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
         webView.getSettings().setDomStorageEnabled(true);
-        
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
         } else {
             webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
         }
+
     }
 
     public void onButtonPressed(Uri uri) {
@@ -102,5 +108,24 @@ public class BlogDetailFragment extends Fragment {
     public interface OnFragmentInteractionListener {
 
         void onFragmentInteraction(Uri uri);
+    }
+
+    public void showProgressDialog(Activity activity, int progress_dialog_layout) {
+
+        AlertDialog.Builder dialogBuilder;
+        dialogBuilder = new AlertDialog.Builder(activity);
+        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View dialogView = inflater.inflate(progress_dialog_layout, null);
+        TextView message=dialogView.findViewById(R.id.textView9);
+        message.setText(getResources().getString(R.string.alert_dialog_download));
+        dialogBuilder.setView(dialogView);
+        dialogBuilder.setCancelable(false);
+        dialog = dialogBuilder.create();
+        dialog.show();
+    }
+
+    public void hideProgressDialog() {
+
+        dialog.dismiss();
     }
 }

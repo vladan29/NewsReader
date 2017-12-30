@@ -56,7 +56,11 @@ public class SourceListFragment extends Fragment {
                     + " must implement OnFragmentInteractionListener");
         }
     }
+    public static SourceListFragment newInstance() {
+        SourceListFragment sourceListFragment = new SourceListFragment();
 
+        return sourceListFragment;
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

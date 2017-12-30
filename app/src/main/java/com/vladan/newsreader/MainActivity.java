@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -22,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -29,7 +31,7 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity implements
         SourceListFragment.OnFragmentInteractionListener,
         BlogListFragment.OnBlogListFragmentInteractionListener,
-        BlogDetailFragment.OnFragmentInteractionListener{
+        BlogDetailFragment.OnFragmentInteractionListener {
 
     private DrawerLayout drawer;
     private SharedPreferences sharedPreferences;
@@ -39,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements
     private String url;
     private String endpoints = "top-headlines";
     FragmentManager fragmentManager;
-    FragmentTransaction transaction;
     SourceListFragment sourceListFragment;
     int selectedEndpoint;
     String topic;
@@ -65,7 +66,6 @@ public class MainActivity extends AppCompatActivity implements
 
         url = res.getString(R.string.host) + endpoints + "?";
         fragmentManager = getSupportFragmentManager();
-        transaction = fragmentManager.beginTransaction();
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -130,10 +130,13 @@ public class MainActivity extends AppCompatActivity implements
                         View startSource = findViewById(R.id.action_sources);
 
                         sourceListFragment = new SourceListFragment();
-                        transaction.replace(R.id.frame_container, sourceListFragment);
-                        transaction.addToBackStack(null);
-                        transaction.commit();
-                        startSource.setVisibility(View.INVISIBLE);
+                        FragmentTransaction transaction1 = fragmentManager.beginTransaction();
+                        transaction1.replace(R.id.frame_container, sourceListFragment);
+                        transaction1.addToBackStack(null);
+                        transaction1.commit();
+
+
+                        startSource.setClickable(false);
 
                         break;
                     case R.id.action_endpoint:
@@ -178,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements
                 return true;
             }
         });
-          createBlogList();
+        createBlogList();
     }
 
     @Override
@@ -208,30 +211,35 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onFragmentInteraction(String source) {
         String id = source;
-//        if (sourceListFragment!=null&&sourceListFragment.isInLayout()){
+
         Toast.makeText(MainActivity.this, "listener" + source, Toast.LENGTH_LONG).show();
-//    }
+
     }
 
     @Override
     public void onBlogListFragmentInteraction(String blogUrl) {
-        FragmentManager fragmentManager=getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction=fragmentManager.beginTransaction();
-        BlogDetailFragment blogDetailFragment=BlogDetailFragment.newInstance(blogUrl);
-        fragmentTransaction.replace(R.id.frame_container,blogDetailFragment);
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        BlogDetailFragment blogDetailFragment = BlogDetailFragment.newInstance(blogUrl);
+        fragmentTransaction.replace(R.id.frame_container, blogDetailFragment);
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
 
-        View botomBarr=findViewById(R.id.bottom_navigation);
-        botomBarr.setVisibility(View.GONE);
+        View botomBarr = findViewById(R.id.bottom_navigation);
+        botomBarr.setVisibility(View.INVISIBLE);
+        LinearLayout content = findViewById(R.id.content_main);
+        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) content.getLayoutParams();
+        params.setMargins(params.leftMargin = 0, params.topMargin = 0, params.rightMargin = 0, params.bottomMargin = 0);
+        content.setLayoutParams(params);
 
     }
-    public void createBlogList(){
-        String url="https://newsapi.org/v2/top-headlines?apiKey=c540ba5d76254cadb8261a1a2fac4342&page=0&language=en";
-        FragmentManager fragmentManager=getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction=fragmentManager.beginTransaction();
-        BlogListFragment allAdvertiserAdFragment=BlogListFragment.newInstance(url);
-        fragmentTransaction.replace(R.id.frame_container,allAdvertiserAdFragment);
+
+    public void createBlogList() {
+        String url = "https://newsapi.org/v2/top-headlines?apiKey=c540ba5d76254cadb8261a1a2fac4342&page=0&language=en";
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        BlogListFragment allAdvertiserAdFragment = BlogListFragment.newInstance(url);
+        fragmentTransaction.replace(R.id.frame_container, allAdvertiserAdFragment);
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
 
@@ -239,6 +247,37 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        int count = MainActivity.this.getSupportFragmentManager().getBackStackEntryCount();
+        if (count > 1) {
+            Fragment currentFragment = fragmentManager
+                    .findFragmentById(R.id.frame_container);
+            if (currentFragment instanceof BlogDetailFragment) {
+                View botomBarr = findViewById(R.id.bottom_navigation);
+                botomBarr.setVisibility(View.VISIBLE);
+                LinearLayout content = findViewById(R.id.content_main);
+                CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) content.getLayoutParams();
+                float pixels = 60 * MainActivity.this.getResources().getDisplayMetrics().density;
+                params.setMargins(params.leftMargin = 0, params.topMargin = 0, params.rightMargin = 0, params.bottomMargin = (int) pixels);
+                content.setLayoutParams(params);
+                super.onBackPressed();
+            }
+            if (currentFragment instanceof SourceListFragment) {
+
+                View startSource = findViewById(R.id.action_sources);
+                startSource.setClickable(true);
+                super.onBackPressed();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.remove(currentFragment);
+                transaction.commit();
+
+
+            }
+        } else finish();
 
     }
 }
