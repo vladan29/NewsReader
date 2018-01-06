@@ -9,7 +9,7 @@
 
     <color name="colorReaderPrimaryDark">#607D8B</color>
     <color name="colorReaderPrimary">#78909C</color>
-    <color name="colorReaderAccent">#ff4081</color>
+    <color name="colorReaderAccent">#008641</color>
     <color name="colorSourceRow">#CFD8DC</color>
 
 </resources>
