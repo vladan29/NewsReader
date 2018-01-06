@@ -1,6 +1,7 @@
 package com.vladan.newsreader;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -41,15 +42,17 @@ public class BlogListFragment extends Fragment {
     BlogListAdapter adapter;
     List<BlogDetails> blogDetailsList = new ArrayList<>();
     String url;
+    String newUrl;
     public int mTotalItemCount;
     public static int scrollFlag = 0;
-    public int pageDown = 0;
-    public int pageUp = 0;
+    public int pageDown = 1;
+    public int pageUp = 1;
     boolean scrollingDown = true;
     boolean scrollingUp;
     int fVItem = 0;
     int mStatusCode;
     Map<String, String> responseHeaders;
+    String myEndpoint;
 
 
     public BlogListFragment() {
@@ -68,11 +71,12 @@ public class BlogListFragment extends Fragment {
         }
     }
 
-    public static BlogListFragment newInstance(String url) {
+    public static BlogListFragment newInstance(String url, String endpoint) {
 
         BlogListFragment blogListFragment = new BlogListFragment();
         Bundle args = new Bundle();
         args.putString("url", url);
+        args.putString("endpoint", endpoint);
         blogListFragment.setArguments(args);
         return blogListFragment;
     }
@@ -80,15 +84,16 @@ public class BlogListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        url = getArguments().getString("url"," ");
+        url = getArguments().getString("url", " ");
+        myEndpoint = getArguments().getString("endpoint", " ");
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView=inflater.inflate(R.layout.fragment_blog_list, container, false);
-        recyclerView=rootView.findViewById(R.id.blog_list_recycler);
-        adapter=new BlogListAdapter(activity,blogDetailsList);
+        View rootView = inflater.inflate(R.layout.fragment_blog_list, container, false);
+        recyclerView = rootView.findViewById(R.id.blog_list_recycler);
+        adapter = new BlogListAdapter(activity, blogDetailsList);
 
         return rootView;
     }
@@ -96,7 +101,7 @@ public class BlogListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        DividerItemDecoration itemDecoration = new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL);
+        SeparatorDecoration itemDecoration = new SeparatorDecoration(recyclerView.getContext(), Color.parseColor("#607D8B"),1.8f);
         recyclerView.addItemDecoration(itemDecoration);
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
@@ -105,12 +110,13 @@ public class BlogListFragment extends Fragment {
         adapter.SetOnItemClickListener(new BlogListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                String blogUrl=blogDetailsList.get(position).getBlogUrl();
+                String blogUrl = blogDetailsList.get(position).getBlogUrl();
                 onItemClicked(blogUrl);
             }
         });
     }
- @SuppressWarnings("deprecation")
+
+    @SuppressWarnings("deprecation")
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -140,8 +146,8 @@ public class BlogListFragment extends Fragment {
                     if (scrollFlag == 0 && scrollingDown && mTotalItemCount != 0 && (mTotalItemCount - fVItem) <= startItem && mTotalItemCount % 20 == 0) {
                         pageDown++;
 
-                        url = url + "&page=" + String.valueOf(pageDown);
-                        fetchData(url);
+                         newUrl = url + "&page=" + String.valueOf(pageDown);
+                        fetchData(newUrl);
 
                         scrollFlag = 1;
                         Log.d("URL", url);
@@ -151,11 +157,11 @@ public class BlogListFragment extends Fragment {
                     Log.d("FirstVisibleItem", String.valueOf(fVItem));
                     Log.d("VisibleItemCount", String.valueOf(visibleItemCount));
 
-                    if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 0) {
+                    if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 1) {
 
                         pageUp--;
-                        url = url + "&page=" + String.valueOf(pageUp);
-                        fetchData(url);
+                        newUrl = url + "&page=" + String.valueOf(pageUp);
+                        fetchData(newUrl);
                         scrollFlag = 1;
                         Log.d("URL", url);
                         Log.d("TotalItemCount", String.valueOf(mTotalItemCount));
@@ -169,11 +175,54 @@ public class BlogListFragment extends Fragment {
                 @Override
                 public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                     super.onScrolled(recyclerView, dx, dy);
+                    int visibleItemCount = myManager.getChildCount();
+                    mTotalItemCount = myManager.getItemCount();
+                    fVItem = myManager.findFirstVisibleItemPosition();
+                    Log.d("DY", String.valueOf(dy));
+                    if (dy > 0) {
+                        scrollingDown = true;
+                        scrollingUp = false;
+                        Log.i("SCROLLING DOWN", "TRUE");
+                    }
+                    if (dy < 0) {
+                        scrollingUp = true;
+                        scrollingDown = false;
+                        Log.i("SCROLLING UP", "TRUE");
+                    }
+
+                    int startItem = visibleItemCount + 3;
+
+                    if (scrollFlag == 0 && scrollingDown && mTotalItemCount != 0 && (mTotalItemCount - fVItem) <= startItem && mTotalItemCount % 20 == 0) {
+                        pageDown++;
+
+                        newUrl = url + "&page=" + String.valueOf(pageDown);
+                        fetchData(newUrl);
+
+                        scrollFlag = 1;
+                        Log.d("URL", url);
+                    }
+
+                    Log.d("TotalItemCount1", String.valueOf(mTotalItemCount));
+                    Log.d("FirstVisibleItem1", String.valueOf(fVItem));
+                    Log.d("VisibleItemCount1", String.valueOf(visibleItemCount));
+
+                    if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 1) {
+
+                        pageUp--;
+                        newUrl = url + "&page=" + String.valueOf(pageUp);
+                        fetchData(newUrl);
+                        scrollFlag = 1;
+                        Log.d("URL", url);
+                        Log.d("TotalItemCount1", String.valueOf(mTotalItemCount));
+                        Log.d("FirstVisibleItem1", String.valueOf(fVItem));
+                        Log.d("VisibleItemCount1", String.valueOf(visibleItemCount));
+                    }
                 }
             });
         }
 
         fetchData(url);
+
     }
 
     public void onItemClicked(String blogUrl) {
@@ -195,7 +244,7 @@ public class BlogListFragment extends Fragment {
     }
 
     public int fetchData(String url) {
-
+        Log.d("bloglistURL", url);
         RequestQueue queue = AppController.getInstance().getRequestQueue();
         StringRequest getRequest = new StringRequest(Request.Method.GET,
                 url,
@@ -217,7 +266,7 @@ public class BlogListFragment extends Fragment {
                                 blogDetails.setBlogUrlToImage(blog.optString("urlToImage"));
                                 blogDetails.setPublishedAt(blog.optString("publishedAt"));
 
-                                if (scrollingDown){
+                                if (scrollingDown) {
                                     blogDetailsList.add(blogDetails);
                                 }
                                 if (scrollingUp) {

@@ -8,10 +8,11 @@
     <string name="action_settings">Setings</string>
     <string name="action_language">Language</string>
     <string name="host">https://newsapi.org/v2/</string>
-    <string name="endpoint">Endpoint</string>
+    <string name="endpoint">Filter</string>
     <string name="sources">Sources</string>
 
     <string-array name="category">
+        <item>all</item>
         <item>business</item>
         <item>entertainment</item>
         <item>gaming</item>
@@ -26,9 +27,8 @@
     </string-array>
 
     <string-array name="language">
-        <item>all</item>
-        <item>ar</item>
         <item>en</item>
+        <item>ar</item>
         <item>cn</item>
         <item>de</item>
         <item>es</item>

@@ -1,5 +1,6 @@
 package com.vladan.newsreader;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
@@ -55,21 +56,26 @@ public class BlogDetailFragment extends Fragment {
         webView=rootView.findViewById(R.id.blog_web_view);
         return rootView;
     }
-
+    @SuppressLint("SetJavaScriptEnabled")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         webView.setWebViewClient(new WebViewClient());
-        webView.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
+
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
         webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setUseWideViewPort(true);
+        webView.getSettings().setLoadWithOverviewMode(true);
+        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+            webView.setLayerType(View.LAYER_TYPE_HARDWARE,null);
         } else {
             webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
+            webView.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
         }
 
     }

@@ -5,6 +5,6 @@
     android:gravity="start"
     android:padding="5dip"
     android:textAlignment="viewStart"
-    android:textColor="@android:color/white"
+    android:textColor="@color/spinnerTextColor"
     android:textSize="17sp"
     android:textStyle="bold" />

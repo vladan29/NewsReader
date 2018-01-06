@@ -2,12 +2,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/action_endpoint"
-        android:icon="@drawable/query"
+        android:icon="@drawable/filter_dark"
         android:title="@string/endpoint"/>
 
     <item
         android:id="@+id/action_sources"
-        android:icon="@drawable/help"
-        android:title="@string/sources"/>
+        android:icon="@drawable/news_dark"
+        android:title="@string/sources"
+        />
+
+    <item
+        android:id="@+id/action_sources_disable"
+        android:icon="@drawable/news_light"
+        android:title="@string/sources"
+        />
 
 </menu>

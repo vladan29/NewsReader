@@ -2,6 +2,7 @@ package com.vladan.newsreader;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -80,7 +81,8 @@ public class SourceListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        DividerItemDecoration itemDecoration = new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL);
+
+        SeparatorDecoration itemDecoration=new SeparatorDecoration(recyclerView.getContext(), Color.parseColor("#008641"),1.5f);
         recyclerView.addItemDecoration(itemDecoration);
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
@@ -91,8 +93,10 @@ public class SourceListFragment extends Fragment {
             public void onItemClick(View view, int position) {
 
                 String sourceId = sourceDetailses.get(position).getId();
-                onItemClicked(sourceId);
-                Toast.makeText(activity, sourceId, Toast.LENGTH_LONG).show();
+                String language=sourceDetailses.get(position).getLanguage();
+                String name=sourceDetailses.get(position).getName();
+                onItemClicked(sourceId,language,name);
+               // Toast.makeText(activity, sourceId, Toast.LENGTH_LONG).show();
                 onDestroy();
             }
         });
@@ -105,9 +109,9 @@ public class SourceListFragment extends Fragment {
 
     }
 
-    public void onItemClicked(String source) {
+    public void onItemClicked(String source,String language,String name) {
         if (listener != null) {
-            listener.onFragmentInteraction(source);
+            listener.onFragmentInteraction(source,language,name);
         }
     }
 
@@ -121,7 +125,7 @@ public class SourceListFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
 
-        void onFragmentInteraction(String source);
+        void onFragmentInteraction(String source,String language,String name);
     }
 
     public void refreshData(String url) {

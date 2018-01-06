@@ -1,9 +1,14 @@
 package com.vladan.newsreader;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -11,39 +16,53 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity implements
         SourceListFragment.OnFragmentInteractionListener,
         BlogListFragment.OnBlogListFragmentInteractionListener,
         BlogDetailFragment.OnFragmentInteractionListener {
 
-    private DrawerLayout drawer;
-    private SharedPreferences sharedPreferences;
-    private SharedPreferences.Editor editor;
-    private String language;
     private int position;
-    private String url;
-    private String endpoints = "top-headlines";
+    public static String endpoints = "top-headlines";
+    public static String category = " ";
+    public static String mySource = "cnn";
+    public static String language = "en";
+    public static String myLanguage = "en";
     FragmentManager fragmentManager;
     SourceListFragment sourceListFragment;
     int selectedEndpoint;
-    String topic;
+    RecyclerView topicList;
+    List<CategoryObject> categoryObjects = new ArrayList<>();
+    View startSource;
+    View startSourceDisable;
+    public static int checkedItem = 0;
+    Spinner language_spinner;
+    TextView tvSourceLanguage;
+    TextView tvSourceName;
+    TextView tvIsConnected;
+    public static String sourceName = "CNN";
+    BroadcastReceiver receiver;
 
 
     @Override
@@ -53,50 +72,21 @@ public class MainActivity extends AppCompatActivity implements
 
         Resources res = getResources();
 
-
-        sharedPreferences = MainActivity.this.getSharedPreferences("com.vladan.newsreader", Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
-        language = sharedPreferences.getString("language", "all");
-        position = sharedPreferences.getInt("position", 0);
-        if (sharedPreferences.getInt("checkedItem", 0) == 0) {
-            endpoints = "top-headlines";
-        } else {
-            endpoints = "everything";
-        }
-
-        url = res.getString(R.string.host) + endpoints + "?";
         fragmentManager = getSupportFragmentManager();
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setTitleTextColor(Color.WHITE);
 
-        String[] category = getResources().getStringArray(R.array.category);
-        drawer = findViewById(R.id.drawer_layout);
-        ListView drawerList = findViewById(R.id.left_drawer);
-        drawerList.setAdapter(new ArrayAdapter<>(MainActivity.this, R.layout.drawer_list_item, category));
-        drawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-
-                topic = adapterView.getAdapter().getItem(position).toString();
-
-                Toast.makeText(MainActivity.this, position + " " + topic, Toast.LENGTH_LONG).show();
-
-                drawer.closeDrawer(GravityCompat.START);
-
-
-            }
-        });
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-
-        Spinner language_spinner = findViewById(R.id.language_spinner);
+        tvSourceLanguage = findViewById(R.id.source_language);
+        tvSourceName = findViewById(R.id.source_name);
+        tvIsConnected = findViewById(R.id.is_connected);
+        language_spinner = findViewById(R.id.language_spinner);
 
 
         ArrayAdapter<CharSequence> languageAdapter = ArrayAdapter.createFromResource(MainActivity.this,
                 R.array.language, R.layout.my_spinner);
-        languageAdapter.setDropDownViewResource(android.R.layout.simple_list_item_checked);
+        languageAdapter.setDropDownViewResource(android.R.layout.simple_list_item_single_choice);
+
 
         language_spinner.setAdapter(languageAdapter);
         language_spinner.setSelection(position);
@@ -105,12 +95,20 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int spinnerPosition, long l) {
 
-                language = adapterView.getAdapter().getItem(spinnerPosition).toString();
-                position = spinnerPosition;
-                editor.putString("language", language);
-                editor.putInt("position", position);
-                editor.apply();
+                String setLanguage = adapterView.getAdapter().getItem(spinnerPosition).toString();
 
+                if (setLanguage.equals("all")) {
+                    myLanguage = " ";
+                } else {
+                    myLanguage = setLanguage;
+                }
+                position = spinnerPosition;
+                if (myLanguage.equals("en")) {
+                    topicList.setVisibility(View.VISIBLE);
+                } else {
+                    topicList.setVisibility(View.GONE);
+                }
+                createBlogList();
             }
 
             @Override
@@ -119,6 +117,45 @@ public class MainActivity extends AppCompatActivity implements
             }
 
         });
+        startSource = findViewById(R.id.action_sources);
+        startSourceDisable = findViewById(R.id.action_sources_disable);
+        startSource.setVisibility(View.GONE);
+        topicList = findViewById(R.id.topic);
+        final String[] topic = res.getStringArray(R.array.category);
+        for (String item : topic) {
+            CategoryObject categoryObject = new CategoryObject();
+            categoryObject.setCategory(item);
+            View categoryDividerRoot = getLayoutInflater().inflate(R.layout.category_list_row, null);
+            TextView tvCategoryDivider = categoryDividerRoot.findViewById(R.id.category_divider);
+            categoryObject.setCategoryDivider(tvCategoryDivider);
+            categoryObjects.add(categoryObject);
+        }
+
+
+        final CategoryAdapter categoryAdapter = new CategoryAdapter(categoryObjects);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        topicList.setLayoutManager(layoutManager);
+        categoryAdapter.SetOnItemClickListener(new CategoryAdapter.OnItemClickListener() {
+            int previousClickPosition = 0;
+
+            @Override
+            public void onItemClick(View view, int position) {
+                String label = categoryObjects.get(position).getCategory();
+                if (label.equals("all")) {
+                    category = " ";
+                } else {
+                    category = label;
+                }
+                createBlogList();
+                CategoryAdapter.previousClickPosition = previousClickPosition;
+                CategoryAdapter.clickPosition = position;
+                previousClickPosition = position;
+                categoryAdapter.notifyDataSetChanged();
+            }
+        });
+        topicList.setAdapter(categoryAdapter);
+
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -127,33 +164,31 @@ public class MainActivity extends AppCompatActivity implements
 
                 switch (item.getItemId()) {
                     case R.id.action_sources:
-                        View startSource = findViewById(R.id.action_sources);
 
                         sourceListFragment = new SourceListFragment();
                         FragmentTransaction transaction1 = fragmentManager.beginTransaction();
                         transaction1.replace(R.id.frame_container, sourceListFragment);
                         transaction1.addToBackStack(null);
                         transaction1.commit();
-
-
-                        startSource.setClickable(false);
+                        startSource.setVisibility(View.GONE);
+                        startSourceDisable.setVisibility(View.VISIBLE);
 
                         break;
                     case R.id.action_endpoint:
-                        Toast.makeText(MainActivity.this, "select 2", Toast.LENGTH_LONG).show();
+                       // Toast.makeText(MainActivity.this, "select 2", Toast.LENGTH_LONG).show();
 
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                         builder.setTitle("Choose an endpoint");
 
 // add a radio button list
 
-                        String[] giveEndpoints = {"top-headlines", "everything"};
-                        int checkedItem = sharedPreferences.getInt("checkedItem", 0);
-                        endpoints = giveEndpoints[checkedItem];
+                        final String[] giveEndpoints = {"top-headlines", "everything"};
+                        endpoints = giveEndpoints[0];
                         builder.setSingleChoiceItems(giveEndpoints, checkedItem, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 selectedEndpoint = which;
+
                             }
                         });
 
@@ -161,10 +196,20 @@ public class MainActivity extends AppCompatActivity implements
                         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                // user clicked OK
-                                editor.putInt("checkedItem", selectedEndpoint);
-                                editor.apply();
 
+                                checkedItem = selectedEndpoint;
+                                endpoints = giveEndpoints[selectedEndpoint];
+                                if (endpoints.equals("top-headlines")) {
+                                    //startSource.setClickable(false);
+                                    startSource.setVisibility(View.GONE);
+                                    startSourceDisable.setVisibility(View.VISIBLE);
+                                } else {
+                                    //startSource.setClickable(true);
+                                    startSource.setVisibility(View.VISIBLE);
+                                    startSourceDisable.setVisibility(View.GONE);
+
+                                }
+                                createBlogList();
                                 dialog.dismiss();
                             }
                         });
@@ -181,38 +226,64 @@ public class MainActivity extends AppCompatActivity implements
                 return true;
             }
         });
+        //startSource.setClickable(false);
         createBlogList();
+
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+                    if (!isOnline(context)) {
+                        tvIsConnected.setVisibility(View.VISIBLE);
+                    } else {
+                        tvIsConnected.setVisibility(View.GONE);
+                    }
+                }
+
+            }
+        };
+        registerReceiver(receiver, intentFilter);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.app_bar, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.app_bar, menu);
+//        return true;
+//    }
+
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//
+//        int id = item.getItemId();
+//
+//        if (id == R.id.action_settings) {
+//            Toast.makeText(MainActivity.this, "settings", Toast.LENGTH_LONG).show();
+//            return true;
+//        }
+//        if (id == R.id.action_language) {
+//            Toast.makeText(MainActivity.this, "language", Toast.LENGTH_LONG).show();
+//
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public void onFragmentInteraction(String source, String sourceLanguage, String name) {
+        mySource = source;
+        language = sourceLanguage;
+        sourceName = name;
+        startSource.setVisibility(View.VISIBLE);
+        startSourceDisable.setVisibility(View.GONE);
+        createBlogList();
 
-        int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            Toast.makeText(MainActivity.this, "settings", Toast.LENGTH_LONG).show();
-            return true;
-        }
-        if (id == R.id.action_language) {
-            Toast.makeText(MainActivity.this, "language", Toast.LENGTH_LONG).show();
-
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onFragmentInteraction(String source) {
-        String id = source;
-
-        Toast.makeText(MainActivity.this, "listener" + source, Toast.LENGTH_LONG).show();
+//        Toast.makeText(MainActivity.this, "listener" + source, Toast.LENGTH_LONG).show();
 
     }
 
@@ -229,20 +300,62 @@ public class MainActivity extends AppCompatActivity implements
         botomBarr.setVisibility(View.INVISIBLE);
         LinearLayout content = findViewById(R.id.content_main);
         CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) content.getLayoutParams();
-        params.setMargins(params.leftMargin = 0, params.topMargin = 0, params.rightMargin = 0, params.bottomMargin = 0);
+        params.setMargins(params.leftMargin = 0, params.topMargin = this.getSupportActionBar().getHeight(), params.rightMargin = 0, params.bottomMargin = 0);
         content.setLayoutParams(params);
+        topicList.setVisibility(View.GONE);
+        if (endpoints.equals("top-headlines")) {
+            language_spinner.setEnabled(false);
+        }
+
 
     }
 
     public void createBlogList() {
-        String url = "https://newsapi.org/v2/top-headlines?apiKey=c540ba5d76254cadb8261a1a2fac4342&page=0&language=en";
+
+        String url_base = "https://newsapi.org/v2/" + endpoints + "?apiKey=c540ba5d76254cadb8261a1a2fac4342";
+        StringBuilder builder = new StringBuilder(url_base);
+        if (endpoints.equals("everything")) {
+            language_spinner.setVisibility(View.GONE);
+            tvSourceLanguage.setText(language);
+            tvSourceLanguage.setVisibility(View.VISIBLE);
+            tvSourceName.setText(sourceName);
+            tvSourceName.setVisibility(View.VISIBLE);
+            topicList.setVisibility(View.GONE);
+            String mySourceFinal = "&sources=" + mySource;
+            if (!mySource.equals(" ")) {
+                builder.append(mySourceFinal);
+            }
+            String myLanguageFinal = "&language=" + language;
+            builder.append(myLanguageFinal);
+        } else {
+            tvSourceName.setVisibility(View.GONE);
+            tvSourceLanguage.setVisibility(View.GONE);
+            if (myLanguage.equals("en")) {
+                topicList.setVisibility(View.VISIBLE);
+            }
+            language_spinner.setVisibility(View.VISIBLE);
+            String myCategory = "&category=" + category;
+            if (!category.equals(" ") && myLanguage.equals("en")) {
+                builder.append(myCategory);
+            }
+            String myLanguageFinal = "&language=" + myLanguage;
+            builder.append(myLanguageFinal);
+
+        }
+
+        loadBlogList(builder.toString(), endpoints);
+
+
+    }
+
+    public void loadBlogList(String url, String endpoint) {
+        Log.d("URL", url);
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        BlogListFragment allAdvertiserAdFragment = BlogListFragment.newInstance(url);
-        fragmentTransaction.replace(R.id.frame_container, allAdvertiserAdFragment);
+        BlogListFragment blogListFragment = BlogListFragment.newInstance(url, endpoint);
+        fragmentTransaction.replace(R.id.frame_container, blogListFragment);
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
-
     }
 
     @Override
@@ -262,14 +375,25 @@ public class MainActivity extends AppCompatActivity implements
                 LinearLayout content = findViewById(R.id.content_main);
                 CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) content.getLayoutParams();
                 float pixels = 60 * MainActivity.this.getResources().getDisplayMetrics().density;
-                params.setMargins(params.leftMargin = 0, params.topMargin = 0, params.rightMargin = 0, params.bottomMargin = (int) pixels);
+                params.setMargins(params.leftMargin = 0, params.topMargin = this.getSupportActionBar().getHeight(), params.rightMargin = 0, params.bottomMargin = (int) pixels);
                 content.setLayoutParams(params);
+                if (myLanguage.equals("en") && endpoints.equals("top-headlines")) {
+                    topicList.setVisibility(View.VISIBLE);
+                }
+                if (endpoints.equals("everything")) {
+                    //startSource.setClickable(true);
+                    startSourceDisable.setVisibility(View.GONE);
+                    startSource.setVisibility(View.VISIBLE);
+                }
+                if (endpoints.equals("top-headlines")) {
+                    language_spinner.setEnabled(true);
+                }
                 super.onBackPressed();
             }
             if (currentFragment instanceof SourceListFragment) {
-
-                View startSource = findViewById(R.id.action_sources);
-                startSource.setClickable(true);
+                startSourceDisable.setVisibility(View.GONE);
+                startSource.setVisibility(View.VISIBLE);
+                //startSource.setClickable(true);
                 super.onBackPressed();
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                 transaction.remove(currentFragment);
@@ -277,7 +401,80 @@ public class MainActivity extends AppCompatActivity implements
 
 
             }
+            if (currentFragment instanceof BlogListFragment) {
+                finish();
+
+            }
+
         } else finish();
 
     }
+
+    class CategoryObject {
+        String category;
+        TextView categoryDivider;
+
+        CategoryObject() {
+        }
+
+        public CategoryObject(String category, TextView categoryDivider) {
+            this.category = category;
+            this.categoryDivider = categoryDivider;
+        }
+
+        String getCategory() {
+            return category;
+        }
+
+        void setCategory(String category) {
+            this.category = category;
+        }
+
+        public TextView getCategoryDivider() {
+            return categoryDivider;
+        }
+
+        void setCategoryDivider(TextView categoryDivider) {
+            this.categoryDivider = categoryDivider;
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putString("category", category);
+        savedInstanceState.putString("endpoints", endpoints);
+        savedInstanceState.putString("myLanguage", myLanguage);
+        savedInstanceState.putString("mySource", mySource);
+        savedInstanceState.putInt("checkedItem", checkedItem);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        category = savedInstanceState.getString("category", " ");
+        endpoints = savedInstanceState.getString("endpoints", "top-headlines");
+        myLanguage = savedInstanceState.getString("myLanguage", "en");
+        mySource = savedInstanceState.getString("mySource", "cnn");
+        checkedItem = savedInstanceState.getInt("checkedItem", 0);
+    }
+
+    public static boolean isOnline(Context c) {
+        ConnectivityManager cm = (ConnectivityManager) c
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+
+        return ni != null && ni.isConnected();
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        if (receiver != null) {
+            unregisterReceiver(receiver);
+            receiver = null;
+        }
+        super.onDestroy();
+    }
+
 }
