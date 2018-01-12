@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.CoordinatorLayout;
@@ -34,8 +35,15 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.security.Timestamp;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 
 public class MainActivity extends AppCompatActivity implements
@@ -175,16 +183,17 @@ public class MainActivity extends AppCompatActivity implements
 
                         break;
                     case R.id.action_endpoint:
-                       // Toast.makeText(MainActivity.this, "select 2", Toast.LENGTH_LONG).show();
+                        // Toast.makeText(MainActivity.this, "select 2", Toast.LENGTH_LONG).show();
 
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                        builder.setTitle("Choose an endpoint");
+                        builder.setTitle("Choose filter");
 
 // add a radio button list
 
                         final String[] giveEndpoints = {"top-headlines", "everything"};
+                        final String[] titleEndpoints={"Top headlines","Everything"};
                         endpoints = giveEndpoints[0];
-                        builder.setSingleChoiceItems(giveEndpoints, checkedItem, new DialogInterface.OnClickListener() {
+                        builder.setSingleChoiceItems(titleEndpoints, checkedItem, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 selectedEndpoint = which;
@@ -247,31 +256,9 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
         registerReceiver(receiver, intentFilter);
+
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.app_bar, menu);
-//        return true;
-//    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//
-//        int id = item.getItemId();
-//
-//        if (id == R.id.action_settings) {
-//            Toast.makeText(MainActivity.this, "settings", Toast.LENGTH_LONG).show();
-//            return true;
-//        }
-//        if (id == R.id.action_language) {
-//            Toast.makeText(MainActivity.this, "language", Toast.LENGTH_LONG).show();
-//
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
 
     @Override
     public void onFragmentInteraction(String source, String sourceLanguage, String name) {
@@ -282,8 +269,6 @@ public class MainActivity extends AppCompatActivity implements
         startSourceDisable.setVisibility(View.GONE);
         createBlogList();
 
-
-//        Toast.makeText(MainActivity.this, "listener" + source, Toast.LENGTH_LONG).show();
 
     }
 
@@ -393,7 +378,6 @@ public class MainActivity extends AppCompatActivity implements
             if (currentFragment instanceof SourceListFragment) {
                 startSourceDisable.setVisibility(View.GONE);
                 startSource.setVisibility(View.VISIBLE);
-                //startSource.setClickable(true);
                 super.onBackPressed();
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                 transaction.remove(currentFragment);
@@ -477,4 +461,25 @@ public class MainActivity extends AppCompatActivity implements
         super.onDestroy();
     }
 
+
+    public String convertDateStringFormat(String strDate) {
+        Calendar calendar = Calendar.getInstance();
+
+        TimeZone timeZone = calendar.getTimeZone();
+        String fromFormat = "yyyy-MM-dd'T'hh:mm:ss";
+        String toFormat = "yyy-MM-dd" + " " + "hh:mm:ss";
+
+        try {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(fromFormat);
+            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC + 0"));
+
+            SimpleDateFormat dateFormatLocale = new SimpleDateFormat(toFormat.trim());
+            dateFormatLocale.setTimeZone(timeZone);
+
+            return dateFormatLocale.format(simpleDateFormat.parse(strDate));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
 }

@@ -29,9 +29,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 
 public class BlogListFragment extends Fragment {
@@ -50,6 +53,7 @@ public class BlogListFragment extends Fragment {
     boolean scrollingDown = true;
     boolean scrollingUp;
     int fVItem = 0;
+   public static int lastFirstVisibleItem=0;
     int mStatusCode;
     Map<String, String> responseHeaders;
     String myEndpoint;
@@ -129,18 +133,21 @@ public class BlogListFragment extends Fragment {
                     int visibleItemCount = myManager.getChildCount();
                     mTotalItemCount = myManager.getItemCount();
                     fVItem = myManager.findFirstVisibleItemPosition();
-                    int dy = scrollY - oldScrollY;
+                   // lastFirstVisibleItem=myManager.findLastVisibleItemPosition();
+                    int dy = fVItem - lastFirstVisibleItem;
                     if (dy > 0) {
                         scrollingDown = true;
                         scrollingUp = false;
-                        Log.i("SCROLLING DOWN", "TRUE");
+
+                        Log.d("SCROLLING DOWN", "TRUE"+dy);
                     }
+
                     if (dy < 0) {
                         scrollingUp = true;
                         scrollingDown = false;
-                        Log.i("SCROLLING UP", "TRUE");
+                        Log.d("SCROLLING UP", "TRUE"+dy);
                     }
-
+                    lastFirstVisibleItem=fVItem;
                     int startItem = visibleItemCount + 3;
 
                     if (scrollFlag == 0 && scrollingDown && mTotalItemCount != 0 && (mTotalItemCount - fVItem) <= startItem && mTotalItemCount % 20 == 0) {
@@ -155,7 +162,7 @@ public class BlogListFragment extends Fragment {
 
                     Log.d("TotalItemCount", String.valueOf(mTotalItemCount));
                     Log.d("FirstVisibleItem", String.valueOf(fVItem));
-                    Log.d("VisibleItemCount", String.valueOf(visibleItemCount));
+                    Log.d("LastVisibleItem", String.valueOf(lastFirstVisibleItem));
 
                     if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 1) {
 
@@ -169,7 +176,9 @@ public class BlogListFragment extends Fragment {
                         Log.d("VisibleItemCount", String.valueOf(visibleItemCount));
                     }
                 }
+
             });
+
         } else {
             recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
                 @Override
@@ -325,4 +334,5 @@ public class BlogListFragment extends Fragment {
 
         return scrollFlag;
     }
+
 }
