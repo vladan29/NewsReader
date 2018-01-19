@@ -1,7 +1,6 @@
 package com.vladan.newsreader;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
@@ -16,14 +15,13 @@ import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.TextView;
+
 
 
 public class BlogDetailFragment extends Fragment {
 
     private String url;
     WebView webView;
-    AlertDialog dialog;
 
     private OnFragmentInteractionListener mListener;
 
@@ -35,7 +33,7 @@ public class BlogDetailFragment extends Fragment {
     public static BlogDetailFragment newInstance(String url) {
         BlogDetailFragment fragment = new BlogDetailFragment();
         Bundle args = new Bundle();
-        args.putString("url",url );
+        args.putString("url", url);
 
         fragment.setArguments(args);
         return fragment;
@@ -52,10 +50,11 @@ public class BlogDetailFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView=inflater.inflate(R.layout.fragment_blog_detail, container, false);
-        webView=rootView.findViewById(R.id.blog_web_view);
+        View rootView = inflater.inflate(R.layout.fragment_blog_detail, container, false);
+        webView = rootView.findViewById(R.id.blog_web_view);
         return rootView;
     }
+
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -72,10 +71,10 @@ public class BlogDetailFragment extends Fragment {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
-            webView.setLayerType(View.LAYER_TYPE_HARDWARE,null);
+            webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         } else {
             webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
-            webView.setLayerType(View.LAYER_TYPE_SOFTWARE,null);
+            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
     }
@@ -91,6 +90,7 @@ public class BlogDetailFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         webView.loadUrl(url);
+
     }
 
     @Override
@@ -107,6 +107,12 @@ public class BlogDetailFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
+
+        webView.clearHistory();
+        webView.clearCache(true);
+        webView.removeAllViews();
+        webView.destroy();
+        webView = null;
         mListener = null;
     }
 
@@ -114,24 +120,5 @@ public class BlogDetailFragment extends Fragment {
     public interface OnFragmentInteractionListener {
 
         void onFragmentInteraction(Uri uri);
-    }
-
-    public void showProgressDialog(Activity activity, int progress_dialog_layout) {
-
-        AlertDialog.Builder dialogBuilder;
-        dialogBuilder = new AlertDialog.Builder(activity);
-        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View dialogView = inflater.inflate(progress_dialog_layout, null);
-        TextView message=dialogView.findViewById(R.id.textView9);
-        message.setText(getResources().getString(R.string.alert_dialog_download));
-        dialogBuilder.setView(dialogView);
-        dialogBuilder.setCancelable(false);
-        dialog = dialogBuilder.create();
-        dialog.show();
-    }
-
-    public void hideProgressDialog() {
-
-        dialog.dismiss();
     }
 }

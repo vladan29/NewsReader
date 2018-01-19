@@ -1,5 +1,6 @@
 package com.vladan.newsreader;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
@@ -8,14 +9,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
@@ -29,12 +31,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 
 public class BlogListFragment extends Fragment {
@@ -47,16 +46,20 @@ public class BlogListFragment extends Fragment {
     String url;
     String newUrl;
     public int mTotalItemCount;
-    public static int scrollFlag = 0;
+    public static int scrollFlag = 1;
     public int pageDown = 1;
     public int pageUp = 1;
     boolean scrollingDown = true;
     boolean scrollingUp;
     int fVItem = 0;
-   public static int lastFirstVisibleItem=0;
+    public static int lastFirstVisibleItem = 0;
     int mStatusCode;
     Map<String, String> responseHeaders;
     String myEndpoint;
+    int newItems;
+    RequestQueue queue;
+    public static String TAG = "GET";
+    AlertDialog dialog;
 
 
     public BlogListFragment() {
@@ -97,7 +100,7 @@ public class BlogListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_blog_list, container, false);
         recyclerView = rootView.findViewById(R.id.blog_list_recycler);
-        adapter = new BlogListAdapter(activity, blogDetailsList);
+        adapter = new BlogListAdapter(blogDetailsList);
 
         return rootView;
     }
@@ -105,7 +108,7 @@ public class BlogListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        SeparatorDecoration itemDecoration = new SeparatorDecoration(recyclerView.getContext(), Color.parseColor("#607D8B"),1.8f);
+        SeparatorDecoration itemDecoration = new SeparatorDecoration(recyclerView.getContext(), Color.parseColor("#607D8B"), 1.8f);
         recyclerView.addItemDecoration(itemDecoration);
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
@@ -133,44 +136,43 @@ public class BlogListFragment extends Fragment {
                     int visibleItemCount = myManager.getChildCount();
                     mTotalItemCount = myManager.getItemCount();
                     fVItem = myManager.findFirstVisibleItemPosition();
-                   // lastFirstVisibleItem=myManager.findLastVisibleItemPosition();
                     int dy = fVItem - lastFirstVisibleItem;
                     if (dy > 0) {
                         scrollingDown = true;
                         scrollingUp = false;
 
-                        Log.d("SCROLLING DOWN", "TRUE"+dy);
+                        Log.d("SCROLLING DOWN", "TRUE" + dy);
                     }
 
                     if (dy < 0) {
                         scrollingUp = true;
                         scrollingDown = false;
-                        Log.d("SCROLLING UP", "TRUE"+dy);
+                        Log.d("SCROLLING UP", "TRUE" + dy);
                     }
-                    lastFirstVisibleItem=fVItem;
+                    lastFirstVisibleItem = fVItem;
                     int startItem = visibleItemCount + 3;
 
-                    if (scrollFlag == 0 && scrollingDown && mTotalItemCount != 0 && (mTotalItemCount - fVItem) <= startItem && mTotalItemCount % 20 == 0) {
+                    if (scrollFlag == 0 && scrollingDown && mTotalItemCount != 0 && (mTotalItemCount - fVItem) <= startItem && mTotalItemCount % 20 == 0 && newItems == 20) {
                         pageDown++;
 
-                         newUrl = url + "&page=" + String.valueOf(pageDown);
+                        newUrl = url + "&page=" + String.valueOf(pageDown);
                         fetchData(newUrl);
 
                         scrollFlag = 1;
-                        Log.d("URL", url);
+                        Log.d("URLsd", newUrl);
                     }
 
                     Log.d("TotalItemCount", String.valueOf(mTotalItemCount));
                     Log.d("FirstVisibleItem", String.valueOf(fVItem));
                     Log.d("LastVisibleItem", String.valueOf(lastFirstVisibleItem));
 
-                    if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 1) {
+                    if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 1 && newItems == 20) {
 
                         pageUp--;
                         newUrl = url + "&page=" + String.valueOf(pageUp);
                         fetchData(newUrl);
                         scrollFlag = 1;
-                        Log.d("URL", url);
+                        Log.d("URLsu", newUrl);
                         Log.d("TotalItemCount", String.valueOf(mTotalItemCount));
                         Log.d("FirstVisibleItem", String.valueOf(fVItem));
                         Log.d("VisibleItemCount", String.valueOf(visibleItemCount));
@@ -201,7 +203,7 @@ public class BlogListFragment extends Fragment {
 
                     int startItem = visibleItemCount + 3;
 
-                    if (scrollFlag == 0 && scrollingDown && mTotalItemCount != 0 && (mTotalItemCount - fVItem) <= startItem && mTotalItemCount % 20 == 0) {
+                    if (scrollFlag == 0 && scrollingDown && mTotalItemCount != 0 && (mTotalItemCount - fVItem) <= startItem && mTotalItemCount % 20 == 0 && newItems == 20) {
                         pageDown++;
 
                         newUrl = url + "&page=" + String.valueOf(pageDown);
@@ -215,13 +217,13 @@ public class BlogListFragment extends Fragment {
                     Log.d("FirstVisibleItem1", String.valueOf(fVItem));
                     Log.d("VisibleItemCount1", String.valueOf(visibleItemCount));
 
-                    if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 1) {
+                    if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 1 && newItems == 20) {
 
                         pageUp--;
                         newUrl = url + "&page=" + String.valueOf(pageUp);
                         fetchData(newUrl);
                         scrollFlag = 1;
-                        Log.d("URL", url);
+                        Log.d("URL", newUrl);
                         Log.d("TotalItemCount1", String.valueOf(mTotalItemCount));
                         Log.d("FirstVisibleItem1", String.valueOf(fVItem));
                         Log.d("VisibleItemCount1", String.valueOf(visibleItemCount));
@@ -229,8 +231,9 @@ public class BlogListFragment extends Fragment {
                 }
             });
         }
-
-        fetchData(url);
+        if (blogDetailsList.size() == 0) {
+            fetchData(url);
+        }
 
     }
 
@@ -254,18 +257,20 @@ public class BlogListFragment extends Fragment {
 
     public int fetchData(String url) {
         Log.d("bloglistURL", url);
-        RequestQueue queue = AppController.getInstance().getRequestQueue();
+        showProgressDialog(getActivity());
+        queue = AppController.getInstance().getRequestQueue();
         StringRequest getRequest = new StringRequest(Request.Method.GET,
                 url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         Log.d("Response", response);
-                        // hideProgressDialog();
+                        hideProgressDialog();
                         try {
 
                             JSONObject jsonObject = new JSONObject(response);
                             JSONArray articles = (JSONArray) jsonObject.get("articles");
+                            newItems = articles.length();
                             for (int i = 0; i < articles.length(); i++) {
                                 JSONObject blog = articles.getJSONObject(i);
                                 BlogDetails blogDetails = new BlogDetails();
@@ -275,15 +280,15 @@ public class BlogListFragment extends Fragment {
                                 blogDetails.setBlogUrlToImage(blog.optString("urlToImage"));
                                 blogDetails.setPublishedAt(blog.optString("publishedAt"));
 
-                                if (scrollingDown) {
+                                if (scrollingDown && newItems > 0) {
                                     blogDetailsList.add(blogDetails);
                                 }
-                                if (scrollingUp) {
+                                if (scrollingUp && newItems > 0) {
                                     blogDetailsList.add(i, blogDetails);
                                     fVItem++;
                                 }
                             }
-                            if (scrollingDown && blogDetailsList.size() > 60 && articles.length() % 20 == 0) {
+                            if (scrollingDown && blogDetailsList.size() > 60 && articles.length() % 20 == 0 && newItems == 20) {
                                 while (blogDetailsList.size() > 60) {
                                     AppController.getInstance().getRequestQueue().getCache()
                                             .remove(blogDetailsList.get(0).getBlogUrlToImage());
@@ -293,7 +298,7 @@ public class BlogListFragment extends Fragment {
                                 }
                                 pageUp++;
                             }
-                            if (scrollingUp && blogDetailsList.size() > 60) {
+                            if (scrollingUp && blogDetailsList.size() > 60 && newItems == 20) {
                                 while (blogDetailsList.size() > 60) {
                                     AppController.getInstance().getRequestQueue().getCache()
                                             .remove(blogDetailsList.get(blogDetailsList.size() - 1).getBlogUrlToImage());
@@ -314,7 +319,7 @@ public class BlogListFragment extends Fragment {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                // Log.d("JSON", error.getMessage());
+                Log.d("JSON", error.getMessage());
             }
         }) {
 
@@ -327,12 +332,39 @@ public class BlogListFragment extends Fragment {
             }
 
         };
-        int retries = 2;
+        int retries = 1;
         getRequest.setRetryPolicy(new DefaultRetryPolicy(DefaultRetryPolicy.DEFAULT_TIMEOUT_MS * 2,
                 retries, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        getRequest.setTag(TAG);
         queue.add(getRequest);
 
         return scrollFlag;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (queue != null) {
+            queue.cancelAll(TAG);
+        }
+    }
+
+    public void showProgressDialog(Activity activity) {
+
+        AlertDialog.Builder dialogBuilder;
+        dialogBuilder = new AlertDialog.Builder(activity);
+        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View dialogView = inflater.inflate(R.layout.progress_dialog_layout, null);
+        TextView message = dialogView.findViewById(R.id.textView9);
+        message.setText(getResources().getString(R.string.alert_dialog_download));
+        dialogBuilder.setView(dialogView);
+        dialogBuilder.setCancelable(false);
+        dialog = dialogBuilder.create();
+        dialog.show();
+    }
+
+    public void hideProgressDialog() {
+
+        dialog.dismiss();
+    }
 }

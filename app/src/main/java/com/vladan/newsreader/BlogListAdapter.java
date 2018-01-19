@@ -21,14 +21,12 @@ import java.util.TimeZone;
 
 public class BlogListAdapter extends RecyclerView.Adapter<BlogListAdapter.ViewHolder> {
 
-    private final FragmentActivity activity;
     private List<BlogDetails> blogDetailses;
     private ImageLoader imageLoader;
     private OnItemClickListener itemClickListener;
 
 
-    public BlogListAdapter(FragmentActivity activity, List<BlogDetails> blogDetailses) {
-        this.activity = activity;
+    public BlogListAdapter(List<BlogDetails> blogDetailses) {
         this.blogDetailses = blogDetailses;
 
         imageLoader = AppController.getInstance().getImageLoader();
@@ -39,7 +37,6 @@ public class BlogListAdapter extends RecyclerView.Adapter<BlogListAdapter.ViewHo
 
         final LayoutInflater mInflater = LayoutInflater.from(parent.getContext());
         final View view = mInflater.inflate(R.layout.blog_list_row, parent, false);
-
         return new ViewHolder(view);
     }
 
@@ -64,6 +61,7 @@ public class BlogListAdapter extends RecyclerView.Adapter<BlogListAdapter.ViewHo
 
         TextView title, description, publishedAt;
         NetworkImageView thumbnail;
+        private int MIN_HIGH = 500;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -71,6 +69,7 @@ public class BlogListAdapter extends RecyclerView.Adapter<BlogListAdapter.ViewHo
             description = itemView.findViewById(R.id.description_blog);
             publishedAt = itemView.findViewById(R.id.published_at_blog);
             thumbnail = itemView.findViewById(R.id.image_blog);
+            thumbnail.setMinimumHeight(MIN_HIGH);
 
             itemView.setOnClickListener(this);
         }
@@ -81,8 +80,6 @@ public class BlogListAdapter extends RecyclerView.Adapter<BlogListAdapter.ViewHo
                 itemClickListener.onItemClick(view, getAdapterPosition());
             }
         }
-
-
     }
 
     public interface OnItemClickListener {

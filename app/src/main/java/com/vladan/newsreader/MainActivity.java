@@ -10,14 +10,12 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,7 +23,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -33,17 +30,9 @@ import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.security.Timestamp;
-import java.sql.Date;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.TimeZone;
 
 
 public class MainActivity extends AppCompatActivity implements
@@ -51,12 +40,12 @@ public class MainActivity extends AppCompatActivity implements
         BlogListFragment.OnBlogListFragmentInteractionListener,
         BlogDetailFragment.OnFragmentInteractionListener {
 
-    private int position;
+
     public static String endpoints = "top-headlines";
     public static String category = " ";
     public static String mySource = "cnn";
     public static String language = "en";
-    public static String myLanguage = "en";
+    public static String myCountry = "us";
     FragmentManager fragmentManager;
     SourceListFragment sourceListFragment;
     int selectedEndpoint;
@@ -65,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements
     View startSource;
     View startSourceDisable;
     public static int checkedItem = 0;
-    Spinner language_spinner;
+    Spinner country_spinner;
     TextView tvSourceLanguage;
     TextView tvSourceName;
     TextView tvIsConnected;
@@ -88,30 +77,22 @@ public class MainActivity extends AppCompatActivity implements
         tvSourceLanguage = findViewById(R.id.source_language);
         tvSourceName = findViewById(R.id.source_name);
         tvIsConnected = findViewById(R.id.is_connected);
-        language_spinner = findViewById(R.id.language_spinner);
+        country_spinner = findViewById(R.id.language_spinner);
 
 
         ArrayAdapter<CharSequence> languageAdapter = ArrayAdapter.createFromResource(MainActivity.this,
-                R.array.language, R.layout.my_spinner);
+                R.array.country, R.layout.my_spinner);
         languageAdapter.setDropDownViewResource(android.R.layout.simple_list_item_single_choice);
-
-
-        language_spinner.setAdapter(languageAdapter);
-        language_spinner.setSelection(position);
-        languageAdapter.notifyDataSetChanged();
-        language_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        country_spinner.setAdapter(languageAdapter);
+        country_spinner.setSelected(false);
+        country_spinner.setSelection(0, true);
+        country_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int spinnerPosition, long l) {
 
-                String setLanguage = adapterView.getAdapter().getItem(spinnerPosition).toString();
+                myCountry = (adapterView.getAdapter().getItem(spinnerPosition).toString()).replaceAll("\\s+", "");
 
-                if (setLanguage.equals("all")) {
-                    myLanguage = " ";
-                } else {
-                    myLanguage = setLanguage;
-                }
-                position = spinnerPosition;
-                if (myLanguage.equals("en")) {
+                if (myCountry.equals("us") || myCountry.equals("au") || myCountry.equals("gb")) {
                     topicList.setVisibility(View.VISIBLE);
                 } else {
                     topicList.setVisibility(View.GONE);
@@ -139,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements
             categoryObjects.add(categoryObject);
         }
 
-
         final CategoryAdapter categoryAdapter = new CategoryAdapter(categoryObjects);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
@@ -164,7 +144,6 @@ public class MainActivity extends AppCompatActivity implements
         });
         topicList.setAdapter(categoryAdapter);
 
-
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -183,25 +162,20 @@ public class MainActivity extends AppCompatActivity implements
 
                         break;
                     case R.id.action_endpoint:
-                        // Toast.makeText(MainActivity.this, "select 2", Toast.LENGTH_LONG).show();
 
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                         builder.setTitle("Choose filter");
 
-// add a radio button list
-
                         final String[] giveEndpoints = {"top-headlines", "everything"};
-                        final String[] titleEndpoints={"Top headlines","Everything"};
+                        final String[] titleEndpoints = {"Top headlines", "Everything"};
                         endpoints = giveEndpoints[0];
                         builder.setSingleChoiceItems(titleEndpoints, checkedItem, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 selectedEndpoint = which;
-
                             }
                         });
 
-// add OK and Cancel buttons
                         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -209,34 +183,26 @@ public class MainActivity extends AppCompatActivity implements
                                 checkedItem = selectedEndpoint;
                                 endpoints = giveEndpoints[selectedEndpoint];
                                 if (endpoints.equals("top-headlines")) {
-                                    //startSource.setClickable(false);
                                     startSource.setVisibility(View.GONE);
                                     startSourceDisable.setVisibility(View.VISIBLE);
+                                    country_spinner.setVisibility(View.VISIBLE);
                                 } else {
-                                    //startSource.setClickable(true);
                                     startSource.setVisibility(View.VISIBLE);
                                     startSourceDisable.setVisibility(View.GONE);
-
+                                    country_spinner.setVisibility(View.GONE);
                                 }
                                 createBlogList();
                                 dialog.dismiss();
                             }
                         });
                         builder.setNegativeButton("Cancel", null);
-
-// create and show the alert dialog
                         AlertDialog dialog = builder.create();
                         dialog.show();
                         break;
-
-
                 }
-
                 return true;
             }
         });
-        //startSource.setClickable(false);
-        createBlogList();
 
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -257,6 +223,8 @@ public class MainActivity extends AppCompatActivity implements
         };
         registerReceiver(receiver, intentFilter);
 
+        createBlogList();
+        
     }
 
 
@@ -289,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements
         content.setLayoutParams(params);
         topicList.setVisibility(View.GONE);
         if (endpoints.equals("top-headlines")) {
-            language_spinner.setEnabled(false);
+            country_spinner.setEnabled(false);
         }
 
 
@@ -299,8 +267,9 @@ public class MainActivity extends AppCompatActivity implements
 
         String url_base = "https://newsapi.org/v2/" + endpoints + "?apiKey=c540ba5d76254cadb8261a1a2fac4342";
         StringBuilder builder = new StringBuilder(url_base);
+
         if (endpoints.equals("everything")) {
-            language_spinner.setVisibility(View.GONE);
+            //country_spinner.setVisibility(View.GONE);
             tvSourceLanguage.setText(language);
             tvSourceLanguage.setVisibility(View.VISIBLE);
             tvSourceName.setText(sourceName);
@@ -315,16 +284,16 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             tvSourceName.setVisibility(View.GONE);
             tvSourceLanguage.setVisibility(View.GONE);
-            if (myLanguage.equals("en")) {
+            if (myCountry.equals("us") || myCountry.equals("au") || myCountry.equals("gb")) {
                 topicList.setVisibility(View.VISIBLE);
             }
-            language_spinner.setVisibility(View.VISIBLE);
+
             String myCategory = "&category=" + category;
-            if (!category.equals(" ") && myLanguage.equals("en")) {
+            if (!category.equals(" ") && (myCountry.equals("us") || myCountry.equals("au") || myCountry.equals("gb"))) {
                 builder.append(myCategory);
             }
-            String myLanguageFinal = "&language=" + myLanguage;
-            builder.append(myLanguageFinal);
+            String myCountryFinal = "&country=" + myCountry;
+            builder.append(myCountryFinal);
 
         }
 
@@ -334,13 +303,13 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void loadBlogList(String url, String endpoint) {
-        Log.d("URL", url);
+        Log.d("URLma", url);
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         BlogListFragment blogListFragment = BlogListFragment.newInstance(url, endpoint);
         fragmentTransaction.replace(R.id.frame_container, blogListFragment);
         fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
+        fragmentTransaction.commitAllowingStateLoss();
     }
 
     @Override
@@ -355,6 +324,7 @@ public class MainActivity extends AppCompatActivity implements
             Fragment currentFragment = fragmentManager
                     .findFragmentById(R.id.frame_container);
             if (currentFragment instanceof BlogDetailFragment) {
+
                 View botomBarr = findViewById(R.id.bottom_navigation);
                 botomBarr.setVisibility(View.VISIBLE);
                 LinearLayout content = findViewById(R.id.content_main);
@@ -362,16 +332,15 @@ public class MainActivity extends AppCompatActivity implements
                 float pixels = 60 * MainActivity.this.getResources().getDisplayMetrics().density;
                 params.setMargins(params.leftMargin = 0, params.topMargin = this.getSupportActionBar().getHeight(), params.rightMargin = 0, params.bottomMargin = (int) pixels);
                 content.setLayoutParams(params);
-                if (myLanguage.equals("en") && endpoints.equals("top-headlines")) {
+                if ((myCountry.equals("us") || myCountry.equals("au") || myCountry.equals("gb")) && endpoints.equals("top-headlines")) {
                     topicList.setVisibility(View.VISIBLE);
                 }
                 if (endpoints.equals("everything")) {
-                    //startSource.setClickable(true);
                     startSourceDisable.setVisibility(View.GONE);
                     startSource.setVisibility(View.VISIBLE);
                 }
                 if (endpoints.equals("top-headlines")) {
-                    language_spinner.setEnabled(true);
+                    country_spinner.setEnabled(true);
                 }
                 super.onBackPressed();
             }
@@ -428,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putString("category", category);
         savedInstanceState.putString("endpoints", endpoints);
-        savedInstanceState.putString("myLanguage", myLanguage);
+        savedInstanceState.putString("myCountry", myCountry);
         savedInstanceState.putString("mySource", mySource);
         savedInstanceState.putInt("checkedItem", checkedItem);
     }
@@ -438,7 +407,7 @@ public class MainActivity extends AppCompatActivity implements
         super.onRestoreInstanceState(savedInstanceState);
         category = savedInstanceState.getString("category", " ");
         endpoints = savedInstanceState.getString("endpoints", "top-headlines");
-        myLanguage = savedInstanceState.getString("myLanguage", "en");
+        myCountry = savedInstanceState.getString("myCountry", "us");
         mySource = savedInstanceState.getString("mySource", "cnn");
         checkedItem = savedInstanceState.getInt("checkedItem", 0);
     }
@@ -459,27 +428,5 @@ public class MainActivity extends AppCompatActivity implements
             receiver = null;
         }
         super.onDestroy();
-    }
-
-
-    public String convertDateStringFormat(String strDate) {
-        Calendar calendar = Calendar.getInstance();
-
-        TimeZone timeZone = calendar.getTimeZone();
-        String fromFormat = "yyyy-MM-dd'T'hh:mm:ss";
-        String toFormat = "yyy-MM-dd" + " " + "hh:mm:ss";
-
-        try {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(fromFormat);
-            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC + 0"));
-
-            SimpleDateFormat dateFormatLocale = new SimpleDateFormat(toFormat.trim());
-            dateFormatLocale.setTimeZone(timeZone);
-
-            return dateFormatLocale.format(simpleDateFormat.parse(strDate));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
     }
 }
