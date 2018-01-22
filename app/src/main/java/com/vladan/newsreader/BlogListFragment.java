@@ -140,14 +140,11 @@ public class BlogListFragment extends Fragment {
                     if (dy > 0) {
                         scrollingDown = true;
                         scrollingUp = false;
-
-                        Log.d("SCROLLING DOWN", "TRUE" + dy);
                     }
 
                     if (dy < 0) {
                         scrollingUp = true;
                         scrollingDown = false;
-                        Log.d("SCROLLING UP", "TRUE" + dy);
                     }
                     lastFirstVisibleItem = fVItem;
                     int startItem = visibleItemCount + 3;
@@ -159,12 +156,7 @@ public class BlogListFragment extends Fragment {
                         fetchData(newUrl);
 
                         scrollFlag = 1;
-                        Log.d("URLsd", newUrl);
                     }
-
-                    Log.d("TotalItemCount", String.valueOf(mTotalItemCount));
-                    Log.d("FirstVisibleItem", String.valueOf(fVItem));
-                    Log.d("LastVisibleItem", String.valueOf(lastFirstVisibleItem));
 
                     if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 1 && newItems == 20) {
 
@@ -172,10 +164,6 @@ public class BlogListFragment extends Fragment {
                         newUrl = url + "&page=" + String.valueOf(pageUp);
                         fetchData(newUrl);
                         scrollFlag = 1;
-                        Log.d("URLsu", newUrl);
-                        Log.d("TotalItemCount", String.valueOf(mTotalItemCount));
-                        Log.d("FirstVisibleItem", String.valueOf(fVItem));
-                        Log.d("VisibleItemCount", String.valueOf(visibleItemCount));
                     }
                 }
 
@@ -193,12 +181,10 @@ public class BlogListFragment extends Fragment {
                     if (dy > 0) {
                         scrollingDown = true;
                         scrollingUp = false;
-                        Log.i("SCROLLING DOWN", "TRUE");
                     }
                     if (dy < 0) {
                         scrollingUp = true;
                         scrollingDown = false;
-                        Log.i("SCROLLING UP", "TRUE");
                     }
 
                     int startItem = visibleItemCount + 3;
@@ -210,12 +196,7 @@ public class BlogListFragment extends Fragment {
                         fetchData(newUrl);
 
                         scrollFlag = 1;
-                        Log.d("URL", url);
                     }
-
-                    Log.d("TotalItemCount1", String.valueOf(mTotalItemCount));
-                    Log.d("FirstVisibleItem1", String.valueOf(fVItem));
-                    Log.d("VisibleItemCount1", String.valueOf(visibleItemCount));
 
                     if (scrollFlag == 0 && scrollingUp && mTotalItemCount != 0 && fVItem <= 3 && pageUp > 1 && newItems == 20) {
 
@@ -223,10 +204,6 @@ public class BlogListFragment extends Fragment {
                         newUrl = url + "&page=" + String.valueOf(pageUp);
                         fetchData(newUrl);
                         scrollFlag = 1;
-                        Log.d("URL", newUrl);
-                        Log.d("TotalItemCount1", String.valueOf(mTotalItemCount));
-                        Log.d("FirstVisibleItem1", String.valueOf(fVItem));
-                        Log.d("VisibleItemCount1", String.valueOf(visibleItemCount));
                     }
                 }
             });
@@ -256,7 +233,6 @@ public class BlogListFragment extends Fragment {
     }
 
     public int fetchData(String url) {
-        Log.d("bloglistURL", url);
         showProgressDialog(getActivity());
         queue = AppController.getInstance().getRequestQueue();
         StringRequest getRequest = new StringRequest(Request.Method.GET,
@@ -264,7 +240,6 @@ public class BlogListFragment extends Fragment {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        Log.d("Response", response);
                         hideProgressDialog();
                         try {
 
@@ -312,14 +287,14 @@ public class BlogListFragment extends Fragment {
                             scrollFlag = 0;
                         } catch (JSONException e) {
 
-                            Log.d("JSON", "prazan string");
+                            Log.d("JSON", "empty string");
                             e.printStackTrace();
                         }
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d("JSON", error.getMessage());
+                Log.d("ERROR", error.getMessage());
             }
         }) {
 
@@ -327,7 +302,6 @@ public class BlogListFragment extends Fragment {
             protected Response<String> parseNetworkResponse(NetworkResponse response) {
                 mStatusCode = response.statusCode;
                 responseHeaders = response.headers;
-                Log.d("STATUS CODE", String.valueOf(mStatusCode));
                 return super.parseNetworkResponse(response);
             }
 

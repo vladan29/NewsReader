@@ -22,7 +22,6 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -224,7 +223,6 @@ public class MainActivity extends AppCompatActivity implements
         registerReceiver(receiver, intentFilter);
 
         createBlogList();
-        
     }
 
 
@@ -269,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements
         StringBuilder builder = new StringBuilder(url_base);
 
         if (endpoints.equals("everything")) {
-            //country_spinner.setVisibility(View.GONE);
+
             tvSourceLanguage.setText(language);
             tvSourceLanguage.setVisibility(View.VISIBLE);
             tvSourceName.setText(sourceName);
@@ -294,7 +292,6 @@ public class MainActivity extends AppCompatActivity implements
             }
             String myCountryFinal = "&country=" + myCountry;
             builder.append(myCountryFinal);
-
         }
 
         loadBlogList(builder.toString(), endpoints);
@@ -303,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void loadBlogList(String url, String endpoint) {
-        Log.d("URLma", url);
+
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         BlogListFragment blogListFragment = BlogListFragment.newInstance(url, endpoint);
