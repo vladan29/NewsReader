@@ -1,11 +1,13 @@
 package com.vladan.newsreader;
 
-import android.support.v4.app.FragmentActivity;
-import android.support.v7.widget.RecyclerView;
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
@@ -33,9 +35,12 @@ public class SourceListAdapter extends RecyclerView.Adapter<SourceListAdapter.Vi
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.tvName.setText("Name:" + sourcesDetailses.get(position).getName());
-        holder.tvDescription.setText("Description:" + sourcesDetailses.get(position).getDescription());
-        holder.tvLanguage.setText("Language:" + sourcesDetailses.get(position).getLanguage());
+        String tvNameText = "Name:" + sourcesDetailses.get(position).getName();
+        String tvDescriptionText = "Description:" + sourcesDetailses.get(position).getDescription();
+        String tvLanguageText = "Language:" + sourcesDetailses.get(position).getLanguage();
+        holder.tvName.setText(tvNameText);
+        holder.tvDescription.setText(tvDescriptionText);
+        holder.tvLanguage.setText(tvLanguageText);
     }
 
     @Override
@@ -57,16 +62,17 @@ public class SourceListAdapter extends RecyclerView.Adapter<SourceListAdapter.Vi
 
         @Override
         public void onClick(View view) {
-       if (itemClickListener!=null){
-           itemClickListener.onItemClick(view,getAdapterPosition());
-       }
+            if (itemClickListener != null) {
+                itemClickListener.onItemClick(view, getAdapterPosition());
+            }
         }
     }
 
     public interface OnItemClickListener {
-         void onItemClick(View view, int position);
+        void onItemClick(View view, int position);
     }
-    public void SetOnItemClickListener(final OnItemClickListener itemClickListener){
-        this.itemClickListener=itemClickListener;
+
+    public void SetOnItemClickListener(final OnItemClickListener itemClickListener) {
+        this.itemClickListener = itemClickListener;
     }
 }
