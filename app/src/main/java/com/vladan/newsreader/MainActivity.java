@@ -10,18 +10,7 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -29,6 +18,19 @@ import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +52,8 @@ public class MainActivity extends AppCompatActivity implements
     int selectedEndpoint;
     RecyclerView topicList;
     List<CategoryObject> categoryObjects = new ArrayList<>();
-    View startSource;
-    View startSourceDisable;
+    MenuItem startSource;
+    MenuItem startSourceDisable;
     public static int checkedItem = 0;
     Spinner country_spinner;
     TextView tvSourceLanguage;
@@ -105,9 +107,7 @@ public class MainActivity extends AppCompatActivity implements
             }
 
         });
-        startSource = findViewById(R.id.action_sources);
-        startSourceDisable = findViewById(R.id.action_sources_disable);
-        startSource.setVisibility(View.GONE);
+
         topicList = findViewById(R.id.topic);
         final String[] topic = res.getStringArray(R.array.category);
         for (String item : topic) {
@@ -143,7 +143,10 @@ public class MainActivity extends AppCompatActivity implements
         });
         topicList.setAdapter(categoryAdapter);
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        final BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        startSource = bottomNavigationView.getMenu().findItem(R.id.action_sources).setVisible(false);
+        startSourceDisable = bottomNavigationView.getMenu().findItem(R.id.action_sources_disable).setVisible(true);
+
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -156,8 +159,8 @@ public class MainActivity extends AppCompatActivity implements
                         transaction1.replace(R.id.frame_container, sourceListFragment);
                         transaction1.addToBackStack(null);
                         transaction1.commit();
-                        startSource.setVisibility(View.GONE);
-                        startSourceDisable.setVisibility(View.VISIBLE);
+                        startSource.setVisible(false);
+                        startSourceDisable.setVisible(true);
 
                         break;
                     case R.id.action_endpoint:
@@ -182,12 +185,12 @@ public class MainActivity extends AppCompatActivity implements
                                 checkedItem = selectedEndpoint;
                                 endpoints = giveEndpoints[selectedEndpoint];
                                 if (endpoints.equals("top-headlines")) {
-                                    startSource.setVisibility(View.GONE);
-                                    startSourceDisable.setVisibility(View.VISIBLE);
+                                    startSource.setVisible(false);
+                                    startSourceDisable.setVisible(true);
                                     country_spinner.setVisibility(View.VISIBLE);
                                 } else {
-                                    startSource.setVisibility(View.VISIBLE);
-                                    startSourceDisable.setVisibility(View.GONE);
+                                    startSource.setVisible(true);
+                                    startSourceDisable.setVisible(false);
                                     country_spinner.setVisibility(View.GONE);
                                 }
                                 createBlogList();
@@ -231,8 +234,8 @@ public class MainActivity extends AppCompatActivity implements
         mySource = source;
         language = sourceLanguage;
         sourceName = name;
-        startSource.setVisibility(View.VISIBLE);
-        startSourceDisable.setVisibility(View.GONE);
+        startSource.setVisible(true);
+        startSourceDisable.setVisible(false);
         createBlogList();
 
 
@@ -333,8 +336,8 @@ public class MainActivity extends AppCompatActivity implements
                     topicList.setVisibility(View.VISIBLE);
                 }
                 if (endpoints.equals("everything")) {
-                    startSourceDisable.setVisibility(View.GONE);
-                    startSource.setVisibility(View.VISIBLE);
+                    startSourceDisable.setVisible(false);
+                    startSource.setVisible(true);
                 }
                 if (endpoints.equals("top-headlines")) {
                     country_spinner.setEnabled(true);
@@ -342,8 +345,8 @@ public class MainActivity extends AppCompatActivity implements
                 super.onBackPressed();
             }
             if (currentFragment instanceof SourceListFragment) {
-                startSourceDisable.setVisibility(View.GONE);
-                startSource.setVisibility(View.VISIBLE);
+                startSourceDisable.setVisible(false);
+                startSource.setVisible(true);
                 super.onBackPressed();
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                 transaction.remove(currentFragment);
@@ -360,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    class CategoryObject {
+    static class CategoryObject {
         String category;
         TextView categoryDivider;
 
@@ -390,7 +393,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle savedInstanceState) {
+    protected void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putString("category", category);
         savedInstanceState.putString("endpoints", endpoints);
@@ -400,7 +403,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         category = savedInstanceState.getString("category", " ");
         endpoints = savedInstanceState.getString("endpoints", "top-headlines");

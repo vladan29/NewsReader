@@ -1,12 +1,12 @@
 package com.vladan.newsreader;
 
-import android.app.Activity;
 import android.graphics.Color;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
@@ -37,10 +37,8 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.label.setText(category.get(position).getCategory());
         if (position == clickPosition) {
-           // holder.categoryDivider.setBackgroundColor(Color.RED);
             holder.label.setTextColor(Color.parseColor("#de000000"));
         } else {
-            //holder.categoryDivider.setBackgroundColor(Color.BLUE);
             holder.label.setTextColor(Color.parseColor("#607d8b"));
         }
 
