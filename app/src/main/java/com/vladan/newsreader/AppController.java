@@ -7,6 +7,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
+import com.vladan.newsreader.internetmonitor.InternetMonitor;
 
 /**
  * Created by vladan on 12/24/2017
@@ -24,6 +25,8 @@ public class AppController extends Application {
     public void onCreate() {
         super.onCreate();
         mInstance = this;
+        InternetMonitor internetMonitor = new InternetMonitor(mInstance);
+        internetMonitor.registerInternetMonitor();
     }
 
     public static synchronized AppController getInstance() {
